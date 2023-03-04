@@ -1,0 +1,91 @@
+---
+title: "MTA Daily Ridership"
+author: "John Cruz"
+date: "2023-03-02"
+output: 
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Hello world
+
+compare daily ridership between different modes of transportation 
+
+**Data Source:** [MTA Daily Ridership](https://data.ny.gov/Transportation/MTA-Daily-Ridership-Data-Beginning-2020/vxuj-8kew)
+
+---
+
+## Required Libraries
+
+```{r library}
+library(tidyverse)
+```
+
+---
+
+# Import file
+
+```{r read-file}
+mta_data <- read_csv('mta_daily_ridership.csv', show_col_types = FALSE)
+mta_data$Date <- as.Date(mta_data$Date, format = '%m/%d/%Y')
+
+knitr::kable(head(mta_data))
+```
+
+```{r transportation-modes}
+
+# create matrix to uniquely identify columns
+col_name_matrix <- 
+  colnames(mta_data) |> 
+  str_split(pattern = ":", simplify = TRUE)
+
+# find distinct transit types 
+col_name <- unique(col_name_matrix[, 1])
+
+# loop through data frame and create new long format data frame
+merged_transit <- data.frame()
+
+for (name in col_name){
+  if (str_to_lower(name) == 'date'){
+    next
+  }
+  
+  temp_df <- 
+    mta_data |> 
+    select('Date', starts_with(name)) |> 
+    rename(date = 1, ridership = 2, pre_covid_pct = 3) |> 
+    mutate(transit_type = name, pre_covid_est = round(ridership / pre_covid_pct, 0)) |> 
+    relocate(transit_type, .after = 'date')
+  
+  merged_transit <- 
+    rbind(merged_transit, temp_df)
+
+}
+
+```
+
+
+```{r graph, message=FALSE}
+
+merged_transit_long <- 
+  merged_transit |> 
+  filter(transit_type == 'Subways')|> 
+  select(!pre_covid_pct) |> 
+  gather('category', 'count', -c('date', 'transit_type'))
+  
+  
+  
+merged_transit_long |> 
+  ggplot(aes(x = date, y = count, color = category)) +
+  geom_smooth(method = 'loess') +
+  ggtitle('Subways') +
+  theme(legend.position = 'top', legend.title = element_blank())
+
+
+```
