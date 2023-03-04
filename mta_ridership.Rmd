@@ -5,6 +5,7 @@ date: "2023-03-02"
 output: 
   html_document: default
   pdf_document: default
+url_color: blue
 ---
 
 ```{r setup, include=FALSE}
@@ -13,9 +14,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-Hello world
+The Metropolitan Transportation Authority (MTA), provides a daily ridership dataset containing systemwide ridership and traffic estimates for subways, buses, Long Island Rail Road, Metro-North Railroad, Access-A-Ride, and Bridges and Tunnels. The data starts March 1, 2020 (April 1, 2020 for LIRR and Metro-North) until current date, and provides a percentage comparison against a comparable pre-pandemic date.
 
-compare daily ridership between different modes of transportation 
+**Note** : Will need to update the code from using CSV file to API connection to establish up to date data. This data was last pulled March 3, 2023. 
+
+The objective will be to compare daily ridership between different modes of transportation against estimated pre-pandemic levels.
 
 **Data Source:** [MTA Daily Ridership](https://data.ny.gov/Transportation/MTA-Daily-Ridership-Data-Beginning-2020/vxuj-8kew)
 
@@ -31,12 +34,18 @@ library(tidyverse)
 
 # Import file
 
+The data is read from a CSV file downloaded from the (NY Open Data)[https://data.ny.gov/]. We can see that there are multiple columns for each unique mode of transportation.
+
 ```{r read-file}
 mta_data <- read_csv('mta_daily_ridership.csv', show_col_types = FALSE)
 mta_data$Date <- as.Date(mta_data$Date, format = '%m/%d/%Y')
 
 knitr::kable(head(mta_data))
 ```
+
+## Transform Data into Long Format
+
+The data is difficult to compare with its current wide format. The following code creates a loop that goes through each column, creating subset data frames that correspond to each unique transit type. The data is then merged back together into one main dataframe containing the date, transit type, and statistics. 
 
 ```{r transportation-modes}
 
@@ -65,13 +74,18 @@ for (name in col_name){
   
   merged_transit <- 
     rbind(merged_transit, temp_df)
-
+  
 }
+
+knitr::kable(head(merged_transit))  
 
 ```
 
+## Comparing Transit Types to their Pre-Pandemic Estimated Ridership
 
-```{r graph, message=FALSE}
+First we see that to compare a transit type, such as the subways, there is seasonality to account for.
+
+```{r graph-seasonal, message=FALSE}
 
 merged_transit_long <- 
   merged_transit |> 
@@ -83,9 +97,38 @@ merged_transit_long <-
   
 merged_transit_long |> 
   ggplot(aes(x = date, y = count, color = category)) +
-  geom_smooth(method = 'loess') +
+  geom_line() +
   ggtitle('Subways') +
   theme(legend.position = 'top', legend.title = element_blank())
 
+
+```
+
+## Trends
+
+The following graphs shows us with a smoothing function how each transit type currently compares to their pre-pandemic levels. A for loop was used to be able to print out each unique transit. 
+
+**Note:** I learned that *ggplot()* does not like to automatically print its plot while in a for loop. You have to explicitly call the *print()* function to ensure it prints out. 
+
+```{r graph-trend, message=FALSE, warning=FALSE}
+
+for (name in col_name){
+  if (str_to_lower(name) == 'date'){
+    next
+  }
+  
+  merged_transit_long <- 
+    merged_transit |> 
+    filter(transit_type == name)|> 
+    select(!pre_covid_pct) |> 
+    gather('category', 'count', -c('date', 'transit_type'))
+  
+  print(merged_transit_long |>
+    ggplot(aes(x = date, y = count, color = category)) +
+    geom_smooth(method = 'loess') +
+    ggtitle(name) +
+    theme(legend.position = 'top', legend.title = element_blank()))
+  
+}
 
 ```
