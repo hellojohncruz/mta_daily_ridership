@@ -3,9 +3,9 @@ title: "MTA Daily Ridership"
 author: "John Cruz"
 date: "2023-03-02"
 output: 
-  pdf_document: default
   html_document: default
-url_color: blue
+  pdf_document: default
+urlcolor: blue
 ---
 
 ```{r setup, include=FALSE}
@@ -137,5 +137,5 @@ for (name in col_name){
 
 ```
 
-## Reccommendations
+## Recommendations
 Further research should be done on how people, who were fully remote, have returned back to the office. Are Uber and Lyft, providing more personal space, increased since the pandemic? Also, looking into transportation deserts within the city, did the numbers ever change from pre-pandemic numbers and can we account for tourism versus native citizens?
