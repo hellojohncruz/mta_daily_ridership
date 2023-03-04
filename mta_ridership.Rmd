@@ -106,9 +106,13 @@ merged_transit_long |>
 
 ## Trends
 
-The following graphs shows us with a smoothing function how each transit type currently compares to their pre-pandemic levels. A for loop was used to be able to print out each unique transit. 
+The following graphs shows us with a smoothing function how each transit type currently compares to their pre-pandemic levels. Because the data frame has numbers in a wide format for ridership and pre-pandemic percentage, I calculated the estimated pre-pandemic ridership and used the *gather()* function to transform the data into a longer format. A for loop was used to be able to do this while also printing out each unique transit type. 
 
 **Note:** I learned that *ggplot()* does not like to automatically print its plot while in a for loop. You have to explicitly call the *print()* function to ensure it prints out. 
+
+[Loops and ggplot](https://statisticsglobe.com/print-ggplot2-plot-within-for-loop-in-r)
+
+Surprisingly, both **Bridges and Tunnels** and **Access-A-Ride** have both returned close to pre-pandemic levels. 
 
 ```{r graph-trend, message=FALSE, warning=FALSE}
 
@@ -132,3 +136,6 @@ for (name in col_name){
 }
 
 ```
+
+## Reccommendations
+Further research should be done on how people, who were fully remote, have returned back to the office. Are Uber and Lyft, providing more personal space, increased since the pandemic? Also, looking into transportation deserts within the city, did the numbers ever change from pre-pandemic numbers and can we account for tourism versus native citizens?
